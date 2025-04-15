@@ -13,4 +13,16 @@ abstract class Repositorio {
         $this->bancoDados = $conexaoBancoDados;
     }
 
+    public function iniciarTransacao() {
+        $this->bancoDados->beginTransaction();
+    }
+
+    public function rollBackTransacao() {
+        $this->bancoDados->rollBack();
+    }
+
+    public function commitarTransacao() {
+        $this->bancoDados->commit();
+    }
+
 }

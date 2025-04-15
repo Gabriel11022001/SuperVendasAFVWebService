@@ -6,7 +6,7 @@ class ObterQueryCadastroCliente {
 
     // obter query para cadastrar cliente na base de dados
     public static function obterQuery(array $campos = []) {
-        $query = "INSERT INTO (";
+        $query = "INSERT INTO tb_clientes(";
 
         foreach ($campos as $indice => $campo) {
 

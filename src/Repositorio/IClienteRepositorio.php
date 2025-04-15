@@ -4,7 +4,7 @@ namespace Repositorio;
 
 use Models\Cliente;
 
-interface IClienteRepositorio {
+interface IClienteRepositorio extends IRepositorio {
 
     function cadastrarCliente(Cliente $clienteCadastrar);
 
@@ -17,5 +17,9 @@ interface IClienteRepositorio {
     function deletarCliente(int $idClienteDeletar);
 
     function alterarStatusCliente(int $idClienteAlterarStatus, bool $novoStatus);
+
+    function buscarClientePeloEmailPrincipal(string $emailPrincipal);
+
+    function buscarClientePeloTelefonePrincipal(string $telefonePrincipal);
 
 }

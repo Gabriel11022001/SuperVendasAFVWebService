@@ -16,7 +16,7 @@ class Cliente {
     // pessoa fisica
     public string $nomeCompleto;
     public string $cpf;
-    public string $dataNascimento;
+    public string|null $dataNascimento;
     public string $tipoDocumento;
     public string $documento;
     public string $genero;
@@ -26,7 +26,7 @@ class Cliente {
     // pessoa juridica
     public string $razaoSocial;
     public string $cnpj;
-    public string $dataFundacao;
+    public string|null $dataFundacao;
     public float $valorPatrimonio;
 
     public function __construct()

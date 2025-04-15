@@ -6,6 +6,7 @@ use Exception;
 use Models\Cliente;
 use Models\Endereco;
 use PDO;
+use Utils\MapearArrayClientesEmListaObjetosCliente;
 use Utils\ObterQueryCadastroCliente;
 
 class ClienteRepositorio extends Repositorio implements IClienteRepositorio {
@@ -49,7 +50,7 @@ class ClienteRepositorio extends Repositorio implements IClienteRepositorio {
         $stmt->bindValue(":status", $clienteCadastrar->status);
         $stmt->bindValue(":nome_completo", $clienteCadastrar->nomeCompleto);
         $stmt->bindValue(":cpf", $clienteCadastrar->cpf);
-        $stmt->bindValue(":data_nascimento", $clienteCadastrar->cpf);
+        $stmt->bindValue(":data_nascimento", $clienteCadastrar->dataNascimento);
         $stmt->bindValue(":tipo_documento", $clienteCadastrar->tipoDocumento);
         $stmt->bindValue(":numero_documento", $clienteCadastrar->documento);
         $stmt->bindValue(":genero", $clienteCadastrar->genero);
@@ -73,7 +74,8 @@ class ClienteRepositorio extends Repositorio implements IClienteRepositorio {
                     bairro,
                     cidade,
                     numero,
-                    uf
+                    uf,
+                    cliente_id
                 ) VALUES(
                     :cep,
                     :logradouro,
@@ -81,7 +83,8 @@ class ClienteRepositorio extends Repositorio implements IClienteRepositorio {
                     :bairro,
                     :cidade,
                     :numero,
-                    :uf
+                    :uf,
+                    :cliente_id
                 );");
 
                 $stmt->bindValue(":cep", $enderecoCadastrar->cep);
@@ -158,7 +161,34 @@ class ClienteRepositorio extends Repositorio implements IClienteRepositorio {
 
     // buscar clientes de forma paginada na base de dados
     public function buscarClientes(int $paginaAtual, int $elementosPorPagina) {
+        $query = "SELECT * FROM tb_clientes";
+        $stmt = $this->bancoDados->prepare($query);
+        $stmt->bindValue(":pagina_atual", $paginaAtual);
+        $stmt->bindValue(":elementos_por_pagina", $elementosPorPagina);
+        $stmt->execute();
+
+        $clientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (count($clientes) > 0) {
+            // obter os endereços dos clientes
+            
+            foreach ($clientes as $cliente) {
+                $cliente["enderecos"] = $this->obterEnderecosCliente($cliente["cliente_id"]);
+            }
+
+        }
+
+        return MapearArrayClientesEmListaObjetosCliente::mapear($clientes);
+    }
+
+    // obter os endereços de cada cliente
+    private function obterEnderecosCliente($clienteId) {
+        $stmt = $this->bancoDados->prepare("SELECT * FROM tb_enderecos WHERE cliente_id = :cliente_id");
+        $stmt->bindValue(":cliente_id", $clienteId);
+        $stmt->execute();
+        $enderecos = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
+        return $enderecos;
     }
 
     // deletar cliente na base de dados
@@ -169,6 +199,65 @@ class ClienteRepositorio extends Repositorio implements IClienteRepositorio {
     // alterar status do cliente na base de dados
     public function alterarStatusCliente(int $idClienteAlterarStatus, bool $novoStatus) {
         
+    }
+
+    public function buscarClientePeloEmailPrincipal(string $emailPrincipal) {
+        
+    }
+
+    public function buscarClientePeloTelefonePrincipal(string $telefonePrincipal) {
+        $stmt = $this->bancoDados->prepare("SELECT * FROM tb_clientes WHERE telefone_principal = :telefone_principal");
+        $stmt->bindValue(":telefone_principal", $telefonePrincipal);
+        $stmt->execute();
+
+        $clienteArray = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!empty($clienteArray)) {
+            // buscar endereços do cliente
+            $enderecos = $this->obterEnderecosCliente($clienteArray["cliente_id"]);
+
+            $cliente = new Cliente();
+            $cliente->clienteId = $clienteArray["cliente_id"];
+            $cliente->tipoPessoa = $clienteArray["tipo_pessoa"];
+            $cliente->telefonePrincipal = $clienteArray["telefone_principal"];
+            $cliente->telefoneSecundario = $clienteArray["telefone_secundario"];
+            $cliente->emailPrincipal = $clienteArray["email_principal"];
+            $cliente->emailSecundario = $clienteArray["email_secundario"];
+            $cliente->status = $clienteArray["status"];
+            $cliente->nomeCompleto = $clienteArray["nome_completo"];
+            $cliente->cpf = $clienteArray["cpf"];
+            $cliente->dataNascimento = $clienteArray["data_nascimento"];
+            $cliente->genero = $clienteArray["genero"];
+            $cliente->nomeMae = $clienteArray["nome_mae"];
+            $cliente->nomePai = $clienteArray["nome_pai"];
+            $cliente->tipoDocumento = $clienteArray["tipo_documento"];
+            $cliente->documento = $clienteArray["numero_documento"];
+            $cliente->razaoSocial = $clienteArray["razao_social"];
+            $cliente->valorPatrimonio = $clienteArray["valor_patrimonio"];
+            $cliente->cnpj = $clienteArray["cnpj"];
+            $cliente->dataFundacao = $clienteArray["data_fundacao"];
+
+            foreach ($enderecos as $enderecoArray) {
+                $endereco = new Endereco();
+
+                $endereco->enderecoId = $enderecoArray["endereco_id"];
+                $endereco->cep = $enderecoArray["cep"];
+                $endereco->complemento = $enderecoArray["complemento"];
+                $endereco->logradouro = $enderecoArray["logradouro"];
+                $endereco->cidade = $enderecoArray["cidade"];
+                $endereco->bairro = $enderecoArray["bairro"];
+                $endereco->numero = $enderecoArray["numero"];
+                $endereco->uf = $enderecoArray["uf"];
+
+                $cliente->enderecos[] = $endereco;
+            }
+
+            return $cliente;
+        } else {
+
+            return null;
+        }
+
     }
 
 }
