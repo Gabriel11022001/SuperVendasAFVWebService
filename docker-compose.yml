@@ -1,0 +1,45 @@
+version: '3'
+
+networks:
+  super_vendas_ntw:
+    driver: bridge
+
+services:
+  # container com php na versão 8.1 e servidor de aplicação http-apache
+  php_apache:
+    build: ./
+    container_name: super_vendas_apache_php
+    ports:
+      - '8080:80'
+    networks:
+      - super_vendas_ntw
+    volumes:
+      - ./:/var/www/html
+  
+  # container com postgreSQL na ultima versão
+  postgreSQL_db:
+    image: postgres:latest
+    container_name: super_vendas_postgres_db
+    ports:
+      - '13000:5432'
+    networks:
+      - super_vendas_ntw
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+    volumes:
+      - ./docker_volumes/postgreSQL:/var/lib/postgresql/data
+  
+  # container com pgadmin na ultima versão
+  pg_admin:
+    image: dpage/pgadmin4:latest
+    container_name: super_vendas_pgadmin
+    ports:
+      - '5000:80'
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=root@postgres.com
+      - PGADMIN_DEFAULT_PASSWORD=root
+    volumes:
+      - ./docker_volumes/pgadmin:/var/lib/pgadmin
+    networks:
+      - super_vendas_ntw
