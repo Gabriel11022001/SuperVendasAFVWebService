@@ -156,7 +156,7 @@ class ClienteServico extends ServicoBase implements IClienteServico {
             return [
                 "ok" => false,
                 "msg" => "Erro ao tentar-se cadastrar o cliente no banco de dados.",
-                "dados" => $e->getMessage()
+                "dados" => []
             ];
         }
 
@@ -170,8 +170,44 @@ class ClienteServico extends ServicoBase implements IClienteServico {
         
     }
 
+    // buscar cliente pelo id
     public function buscarClientePeloId() {
-        
+
+        try {
+
+            if (!isset($_GET["cliente_id"]) || empty(trim($_GET["cliente_id"]))) {
+
+                throw new Exception("Informe o parâmetro cliente_id na url.");
+            }
+
+            $clienteId = intval(trim($_GET["cliente_id"]));
+
+            $cliente = $this->clienteRepositorio->buscarClientePeloId($clienteId);
+
+            if (empty($cliente)) {
+
+                return [
+                    "ok" => false,
+                    "msg" => "Cliente não encontrado.",
+                    "dados" => []
+                ];
+            }
+
+            return [
+                "ok" => true,
+                "msg" => "Cliente encontrado.",
+                "dados" => $cliente
+            ];
+        } catch (Exception $e) {
+            // registrar erro no arquivo de log
+
+            return [
+                "ok" => false,
+                "msg" => "Erro ao tentar-se consultar o cliente pelo id.",
+                "dados" => []
+            ];
+        }
+
     }
 
     // buscar clientes paginado
@@ -180,6 +216,10 @@ class ClienteServico extends ServicoBase implements IClienteServico {
         try {
             $paginaAtual = $_GET["pagina_atual"];
             $elementosPorPagina = $_GET["elementos_pagina"];
+
+            if ($paginaAtual <= 0) {    
+                $paginaAtual = 1;
+            }
 
             if ($elementosPorPagina > $this->maximoClientesPorPagina
             || $elementosPorPagina < $this->minimoClientesPorPagina) {

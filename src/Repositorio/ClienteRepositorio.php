@@ -128,6 +128,23 @@ class ClienteRepositorio extends Repositorio implements IClienteRepositorio {
             $cliente = new Cliente();
             $cliente->clienteId = $dadosCliente["cliente_id"];
             $cliente->tipoPessoa = $dadosCliente["tipo_pessoa"];
+            $cliente->telefonePrincipal = $dadosCliente["telefone_principal"];
+            $cliente->telefoneSecundario = $dadosCliente["telefone_secundario"];
+            $cliente->emailPrincipal = $dadosCliente["email_principal"];
+            $cliente->emailSecundario = $dadosCliente["email_secundario"];
+            $cliente->status = $dadosCliente["status"];
+            $cliente->nomeCompleto = $dadosCliente["nome_completo"];
+            $cliente->cpf = $dadosCliente["cpf"];
+            $cliente->dataNascimento = $dadosCliente["data_nascimento"];
+            $cliente->genero = $dadosCliente["genero"];
+            $cliente->tipoDocumento = $dadosCliente["tipo_documento"];
+            $cliente->documento = $dadosCliente["numero_documento"];
+            $cliente->nomeMae = $dadosCliente["nome_mae"];
+            $cliente->nomePai = $dadosCliente["nome_pai"];
+            $cliente->razaoSocial = $dadosCliente["razao_social"];
+            $cliente->cnpj = $dadosCliente["cnpj"];
+            $cliente->valorPatrimonio = $dadosCliente["valor_patrimonio"];
+            $cliente->dataFundacao = $dadosCliente["data_fundacao"];
 
             // buscar os endereços do cliente
             $stmt = $this->bancoDados->prepare("SELECT * FROM tb_enderecos WHERE cliente_id = :cliente_id;");
@@ -161,19 +178,20 @@ class ClienteRepositorio extends Repositorio implements IClienteRepositorio {
 
     // buscar clientes de forma paginada na base de dados
     public function buscarClientes(int $paginaAtual, int $elementosPorPagina) {
-        $query = "SELECT * FROM tb_clientes";
+        $query = "SELECT * FROM tb_clientes LIMIT :limit OFFSET :offset";
         $stmt = $this->bancoDados->prepare($query);
-        $stmt->bindValue(":pagina_atual", $paginaAtual);
-        $stmt->bindValue(":elementos_por_pagina", $elementosPorPagina);
+        $stmt->bindValue(":limit", $elementosPorPagina);
+        $stmt->bindValue(":offset",($paginaAtual - 1) * $elementosPorPagina);
         $stmt->execute();
-
         $clientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         if (count($clientes) > 0) {
             // obter os endereços dos clientes
             
-            foreach ($clientes as $cliente) {
-                $cliente["enderecos"] = $this->obterEnderecosCliente($cliente["cliente_id"]);
+            for ($i = 0; $i < count($clientes); $i++) {
+                $enderecos = $this->obterEnderecosCliente($clientes[$i]["cliente_id"]);
+
+                $clientes[$i]["enderecos"] = $enderecos;
             }
 
         }
@@ -198,13 +216,15 @@ class ClienteRepositorio extends Repositorio implements IClienteRepositorio {
 
     // alterar status do cliente na base de dados
     public function alterarStatusCliente(int $idClienteAlterarStatus, bool $novoStatus) {
-        
+
     }
 
+    // buscar cliente pelo e-mail principal
     public function buscarClientePeloEmailPrincipal(string $emailPrincipal) {
         
     }
 
+    // buscar cliente pelo telefone principal
     public function buscarClientePeloTelefonePrincipal(string $telefonePrincipal) {
         $stmt = $this->bancoDados->prepare("SELECT * FROM tb_clientes WHERE telefone_principal = :telefone_principal");
         $stmt->bindValue(":telefone_principal", $telefonePrincipal);

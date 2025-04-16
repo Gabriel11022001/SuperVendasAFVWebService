@@ -156,6 +156,66 @@ class Rota {
         
     }
 
+    // tratar requisições http-delete
+    public function delete($endpoint, $controller, $action) {
+
+        if (empty($endpoint) || $endpoint === "" || $endpoint === "/") {
+
+            echo json_encode([
+                "ok" => true,
+                "msg" => "WebService ativo!",
+                "dados" => [] 
+            ]);
+
+            return;
+        }
+
+        if ($endpoint == "/404") {
+
+            echo json_encode([
+                "ok" => false,
+                "msg" => "Rota não mapeada!",
+                "dados" => []
+            ]);
+
+            return;
+        }
+
+        if (empty($endpoint)) {
+
+            throw new Exception("Informe o endpoint!");
+        }
+
+        if (empty($controller)) {
+
+            throw new Exception("Informe a controller!");
+        }
+
+        if (empty($action)) {   
+
+            throw new Exception("Informe a action da controller!");
+        }
+
+        // validar se existem a controller em questão
+        if (!$this->validarControllerExiste($controller)) {
+
+            throw new Exception("A controller " . $controller . " não existe!");
+        }
+
+        // validar se a controller possui a action em questão
+
+        // validar se o endpoint bate com o endpoint atual
+        if ($this->rotaAtualRequisicao === $endpoint
+        && $this->tipoRequisicao === "DELETE") {
+            $controllerRequisicao = new $controller();
+            // apresentar o retorno no formato json
+            echo json_encode($controllerRequisicao->$action());
+
+            return;
+        }
+        
+    }
+
     // obter a rota atual sendo chamada
     public function getRotaAtual () {
 
