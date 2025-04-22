@@ -14,9 +14,9 @@ class Permissao {
         bool $status = true
     )
     {
-        $this->permissaoId = 0;
-        $this->nome = "";
-        $this->status = true;
+        $this->permissaoId = $permissaoId;
+        $this->nome = $nome;
+        $this->status = $status;
     }
 
 }

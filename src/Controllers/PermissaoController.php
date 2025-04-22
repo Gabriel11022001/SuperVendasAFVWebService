@@ -26,4 +26,22 @@ class PermissaoController {
         return $this->permissaoServico->deletarPermissao();
     }
 
+    // buscar permissoes
+    public function buscarPermissoes() {
+
+        return $this->permissaoServico->buscarPermissoes();
+    }
+
+    // editar permissão
+    public function editarPermissao() {
+
+        return $this->permissaoServico->editarPermissao();
+    }
+
+    // buscar permissão pelo id
+    public function buscarPermissaoPeloId() {
+
+        return $this->permissaoServico->buscarPermissaoPeloId();
+    }
+
 }

@@ -74,11 +74,12 @@ class PermissaoRepositorio extends Repositorio implements IPermissaoRepositorio 
         $permissoes = [];
 
         foreach ($permissoesArray as $permissaoArray) {
-            array_push($permissoes, new Permissao(
-                $permissaoArray["permissao_id"],
-                $permissaoArray["nome"],
-                $permissaoArray["status"]
-            ));
+            $permissao = new Permissao();
+            $permissao->permissaoId = $permissaoArray["permissao_id"];
+            $permissao->nome = $permissaoArray["nome"];
+            $permissao->status = $permissaoArray["status"];
+
+            $permissoes[] = $permissao;
         }
 
         return $permissoes;
