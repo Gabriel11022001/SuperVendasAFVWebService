@@ -19,7 +19,7 @@ create table tb_permissao_nivel_acesso(
 );
 
 -- criar tabela de usuários
-create tabela tb_usuarios (
+create table tb_usuarios (
 	usuario_id serial primary key,
 	nome_completo text not null,
 	login text not null,
@@ -66,4 +66,11 @@ create table tb_enderecos(
 	numero text not null default 's/n',
 	cliente_id integer,
 	foreign key(cliente_id) references tb_clientes(cliente_id)
+);
+
+-- criar tabela de categorias
+create table tb_categorias(
+	categoria_id serial primary key,
+	nome text not null,
+	status boolean not null
 );

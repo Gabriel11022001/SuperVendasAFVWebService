@@ -9,6 +9,7 @@ use Repositorio\INivelAcessoRepositorio;
 use Repositorio\IPermissaoRepositorio;
 use Repositorio\NivelAcessoRepositorio;
 use Repositorio\PermissaoRepositorio;
+use Utils\Resposta;
 
 class NivelAcessoServico extends ServicoBase implements INivelAcessoServico { 
 
@@ -111,7 +112,7 @@ class NivelAcessoServico extends ServicoBase implements INivelAcessoServico {
     }
 
     public function editarNivelAceso() {
-        
+
     }
 
     // deletar nivel de acesso
@@ -194,8 +195,34 @@ class NivelAcessoServico extends ServicoBase implements INivelAcessoServico {
 
     }
 
+    // buscar nivel de acesso pelo id
     public function buscarNivelAcessoPeloId() {
-        
+
+        try {
+
+            if (!isset($_GET["nivel_acesso_id"])) {
+                Resposta::response(false, "Informe o parâmetro nivel_acesso_id na url.");
+            }
+
+            $id = trim($_GET["nivel_acesso_id"]);
+
+            if (empty($id)) {
+                Resposta::response(false, "Informe o id do nivel de acesso.");
+            }
+
+            $nivelAcesso = $this->nivelAcessoRepositorio->buscarNivelAcessoPeloId($id);
+
+            if (empty($nivelAcesso)) {
+                Resposta::response(false, "Nivel de acesso não encontrado.");
+            }
+
+            Resposta::response(true, "Nível de acesso encontrado com sucesso.", $nivelAcesso);
+        } catch (Exception $e) {
+            // registrar no arquivo de log
+
+            Resposta::response(false, "Erro ao tentar-se buscar o nivel de acesso pelo id.");
+        }
+
     }
 
 }

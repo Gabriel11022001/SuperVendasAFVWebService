@@ -1,9 +1,11 @@
 <?php
 
+use Controllers\CategoriaController;
 use Controllers\ClienteController;
 use Controllers\NivelAcessoController;
 use Controllers\PermissaoController;
 use Controllers\Rota;
+use Controllers\UsuarioController;
 
 require_once "autoload.php";
 require_once __DIR__ . "/configurar.php";
@@ -59,6 +61,22 @@ try {
         case "/niveisacesso/deletar":
             // deletar nivel de acesso
             $rota->delete("/niveisacesso/deletar", NivelAcessoController::class, "deletarNivelAcesso");
+            break;
+        case "/niveisacesso/buscar-pelo-id":
+            // buscar nivel de acesso pelo id
+            $rota->get("/niveisacesso/buscar-pelo-id", NivelAcessoController::class, "buscarNivelAcessoPeloId");
+            break;
+        case "/usuarios/cadastrar":
+            // cadastrar usuário
+            $rota->post("/usuarios/cadastrar", UsuarioController::class, "cadastrarUsuario");
+            break;
+        case "/categorias/cadastrar":
+            // cadastrar categoria
+            $rota->post("/categorias/cadastrar", CategoriaController::class, "cadastrarCategoria");
+            break;
+        case "/categorias":
+            // buscar categorias
+            $rota->get("/categorias", CategoriaController::class, "buscarCategorias");
             break;
         default:
             $rota->get("/404");

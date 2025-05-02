@@ -32,4 +32,10 @@ class NivelAcessoController {
         return $this->nivelAcessoServico->deletarNivelAcesso();
     }
 
+    // buscar nivel de acesso pelo id
+    public function buscarNivelAcessoPeloId() {
+
+        return $this->nivelAcessoServico->buscarNivelAcessoPeloId();
+    }
+
 }

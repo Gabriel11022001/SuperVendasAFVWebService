@@ -17,5 +17,10 @@ function getParametro($nome = "") {
         throw new Exception('No objeto json não existe uma propriedade definida com o nome: ' . $nome);
     }
 
+    if (is_string($propriedadesObjetosRequisicao[ $nome ])) {
+        
+        return trim($propriedadesObjetosRequisicao[ $nome ]);
+    }
+
     return $propriedadesObjetosRequisicao[ $nome ];
 }
