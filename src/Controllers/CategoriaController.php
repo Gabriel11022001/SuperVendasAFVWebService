@@ -26,4 +26,16 @@ class CategoriaController {
         return $this->categoriaServico->buscarCategorias();
     }
 
+    // buscar categoria pelo id
+    public function buscarCategoriaPeloId() {
+
+        return $this->categoriaServico->buscarCategoriaPeloId();
+    }
+
+    // editar categoria de produto
+    public function editarCategoria() {
+
+        return $this->categoriaServico->editarCategoria();
+    }
+
 }

@@ -27,8 +27,19 @@ class CategoriaRepositorio extends Repositorio implements ICategoriaRepositorio 
         $categoriaCadastrar->categoriaId = $this->bancoDados->lastInsertId();
     }
 
+    // editar categoria
     public function editarCategoria(Categoria $categoriaEditar) {
-        
+        $stmt = $this->bancoDados->prepare("UPDATE tb_categorias SET nome = :nome, status = :status 
+        WHERE categoria_id = :categoria_id");
+        $stmt->bindValue(":nome", $categoriaEditar->nome);
+        $stmt->bindValue(":status", $categoriaEditar->status);
+        $stmt->bindValue(":categoria_id", $categoriaEditar->categoriaId);
+
+        if (!$stmt->execute()) {
+
+            throw new Exception("Erro ao tentar-se editar a categoria.");
+        }
+
     }
 
     // buscar categoria pelo id

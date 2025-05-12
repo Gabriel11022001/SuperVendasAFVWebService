@@ -4,6 +4,7 @@ use Controllers\CategoriaController;
 use Controllers\ClienteController;
 use Controllers\NivelAcessoController;
 use Controllers\PermissaoController;
+use Controllers\ProdutoController;
 use Controllers\Rota;
 use Controllers\UsuarioController;
 
@@ -77,6 +78,30 @@ try {
         case "/categorias":
             // buscar categorias
             $rota->get("/categorias", CategoriaController::class, "buscarCategorias");
+            break;
+        case "/categorias/buscar-pelo-id":
+            // buscar categoria pelo id
+            $rota->get("/categorias/buscar-pelo-id", CategoriaController::class, "buscarCategoriaPeloId");
+            break;
+        case "/categorias/editar":
+            // editar categoria de produto
+            $rota->put("/categorias/editar", CategoriaController::class, "editarCategoria");
+            break;
+        case "/produtos/cadastrar":
+            // cadastrar produto
+            $rota->post("/produtos/cadastrar", ProdutoController::class, "cadastrarProduto");
+            break;
+        case "/produtos":
+            // buscar produtos
+            $rota->get("/produtos", ProdutoController::class, "buscarProdutos");
+            break;
+        case "/produtos/alterar-status":
+            // alterar o status do produto
+            $rota->put("/produtos/alterar-status", ProdutoController::class, "alterarStatusProduto");
+            break;
+        case "/produtos/filtrar":
+            // filtrar produtos
+            $rota->get("/produtos/filtrar", ProdutoController::class, "filtrarProdutos");
             break;
         default:
             $rota->get("/404");

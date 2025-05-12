@@ -74,3 +74,20 @@ create table tb_categorias(
 	nome text not null,
 	status boolean not null
 );
+
+-- criar tabela de produtos
+create table tb_produtos(
+	produto_id serial primary key,
+	nome text not null,
+	descricao text not null,
+	preco_compra decimal,
+	preco_venda decimal not null,
+	status boolean not null default true,
+	unidades_estoque integer not null,
+	url_foto_produto text,
+	data_vencimento date not null,
+	data_entrada_estoque date,
+	percentual_desconto decimal default 0,
+	categoria_id integer not null,
+	foreign key(categoria_id) references tb_categorias(categoria_id)
+);
