@@ -38,4 +38,10 @@ class ProdutoController {
         return $this->produtoServico->filtrarProdutos();
     }
 
+    // buscar produto pelo id
+    public function buscarProdutoPeloId() {
+
+        return $this->produtoServico->buscarProdutoPeloId();
+    }
+
 }

@@ -154,8 +154,32 @@ class ProdutoServico extends ServicoBase implements IProdutoServico {
         
     }
 
+    // buscar produto pelo id
     public function buscarProdutoPeloId() {
         
+        try {
+
+            if (!isset($_GET["produto_id"])) {
+                Resposta::response(false, "Informe o id do produto na url.");
+            }
+
+            $produtoId = trim($_GET["produto_id"]);
+
+            if (empty($produtoId)) {
+                Resposta::response(false, "Informe o id do produto na url.");
+            }
+
+            $produto = $this->produtoRepositorio->buscarProdutoPeloId($produtoId);
+
+            if (empty($produto)) {
+                Resposta::response(true, "Produto não encontrado na base de dados.");
+            }
+
+            Resposta::response(true, "Produto encontrado com sucesso.", $produto);
+        } catch (Exception $e) {
+            Resposta::response(false, "Erro ao tentar-se consultar o produto pelo id.");
+        }
+
     }
 
     // buscar produtos de forma paginada

@@ -107,6 +107,10 @@ try {
             // deletar categoria
             $rota->delete("/categorias/deletar", CategoriaController::class, "deletarCategoria");
             break;
+        case "/produtos/buscar-pelo-id":
+            // buscar produto pelo id
+            $rota->get("/produtos/buscar-pelo-id", ProdutoController::class, "buscarProdutoPeloId");
+            break;
         default:
             $rota->get("/404");
     }

@@ -130,8 +130,17 @@ class ProdutoRepositorio extends Repositorio implements IProdutoRepositorio {
         return $produtos;
     }
 
+    // alterar o status do produto
     public function alterarStatusProduto(int $produtoId, bool $novoStatus) {
-        
+        $stmt = $this->bancoDados->prepare("UPDATE tb_produtos SET status = :status WHERE produto_id = :produto_id");
+        $stmt->bindValue(":status", $novoStatus, PDO::PARAM_BOOL);
+        $stmt->bindValue(":produto_id", $produtoId);
+
+        if (!$stmt->execute()) {
+
+            throw new Exception("Erro ao tentar-se alterar o status do produto.");
+        }
+
     }
 
     // filtrar produtos na base de dados
