@@ -28,4 +28,6 @@ interface IProdutoRepositorio {
 
     function buscarProdutoPeloNome(string $nomeProduto);
 
+    function buscarProdutosPelaCategoria(int $idCategoriaProduto);
+
 }

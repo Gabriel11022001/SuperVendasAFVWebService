@@ -6,16 +6,20 @@ use Exception;
 use Models\Categoria;
 use Repositorio\CategoriaRepositorio;
 use Repositorio\ICategoriaRepositorio;
+use Repositorio\IProdutoRepositorio;
+use Repositorio\ProdutoRepositorio;
 use Utils\Resposta;
 
 class CategoriaServico extends ServicoBase implements ICategoriaServico {
 
     private ICategoriaRepositorio $categoriaRepositorio;
+    private IProdutoRepositorio $produtoRepositorio;
 
     public function __construct()
     {
         parent::__construct();
 
+        $this->produtoRepositorio = new ProdutoRepositorio($this->bancoDados);
         $this->categoriaRepositorio = new CategoriaRepositorio($this->bancoDados);
     }
 
@@ -112,8 +116,36 @@ class CategoriaServico extends ServicoBase implements ICategoriaServico {
 
     }
 
+    // deletar categoria
     public function deletarCategoria() {
-    
+        
+        try {
+
+            if (!isset($_GET["categoria_id"])) {
+                Resposta::response(false, "Informe o id da categoria.");
+            }
+
+            $categoriaId = trim($_GET["categoria_id"]);
+
+            if (empty($categoriaId)) {
+                Resposta::response(false, "Informe o id da categoria.");
+            }
+
+            if (empty($this->categoriaRepositorio->buscarCategoriaPeloId($categoriaId))) {
+                Resposta::response(false, "Categoria não encontrada.");
+            }
+            
+            if (count($this->produtoRepositorio->buscarProdutosPelaCategoria($categoriaId)) > 0) {
+                Resposta::response(false, "A categoria em questão possui produtos relacionados.");
+            }
+
+            $this->categoriaRepositorio->deletarCategoria($categoriaId);
+
+            Resposta::response(true, "Categoria deletada com sucesso.");
+        } catch (Exception $e) {
+            Resposta::response(false, "Erro ao tentar-se deletar a categoria.");
+        }
+
     }
 
     // buscar categoria pelo id

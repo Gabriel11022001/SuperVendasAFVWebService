@@ -276,4 +276,44 @@ class ProdutoRepositorio extends Repositorio implements IProdutoRepositorio {
         return $produto;
     }
 
+    // buscar produtos pelo id da categoria
+    public function buscarProdutosPelaCategoria(int $idCategoriaProduto) {
+        $stmt = $this->bancoDados->prepare("SELECT p.produto_id, p.nome, p.status, p.descricao, p.preco_compra, p.preco_venda,
+        p.data_entrada_estoque, p.data_vencimento, p.percentual_desconto, p.url_foto_produto,
+        p.unidades_estoque, p.categoria_id, c.nome AS nome_categoria, c.status AS status_categoria
+        FROM tb_produtos AS p, tb_categorias AS c
+        WHERE p.categoria_id = c.categoria_id
+        AND p.categoria_id = :categoria_id");
+
+        $stmt->bindValue(":categoria_id", $idCategoriaProduto);
+        $stmt->execute();
+        $produtosArray = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $produtos = [];
+
+        foreach ($produtosArray as $produtoArray) {
+            $produto = new Produto();
+            $produto->produtoId = $produtoArray["produto_id"];
+            $produto->nome = $produtoArray["nome"];
+            $produto->status = $produtoArray["status"];
+            $produto->descricao = $produtoArray["descricao"];
+            $produto->precoCompra = $produtoArray["preco_compra"];
+            $produto->precoVenda = $produtoArray["preco_venda"];
+            $produto->dataVencimento = empty($produtoArray["data_vencimento"]) ? null : new DateTime($produtoArray["data_vencimento"]);
+            $produto->dataEntradaEstoque = empty($produtoArray["data_entrada_estoque"]) ? null : new DateTime($produtoArray["data_entrada_estoque"]);
+            $produto->percentualDesconto = $produtoArray["percentual_desconto"];
+            $produto->urlFotoProduto = $produtoArray["url_foto_produto"];
+            $produto->unidadesEstoque = $produtoArray["unidades_estoque"];
+            $produto->categoriaId = $produtoArray["categoria_id"];
+            $produto->categoria = new Categoria(
+                $produtoArray["categoria_id"],
+                $produtoArray["nome_categoria"],
+                $produtoArray["status_categoria"]
+            );
+
+            $produtos[] = $produto;
+        }
+
+        return $produtos;
+    }
+
 }

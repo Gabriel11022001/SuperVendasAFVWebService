@@ -103,6 +103,10 @@ try {
             // filtrar produtos
             $rota->get("/produtos/filtrar", ProdutoController::class, "filtrarProdutos");
             break;
+        case "/categorias/deletar":
+            // deletar categoria
+            $rota->delete("/categorias/deletar", CategoriaController::class, "deletarCategoria");
+            break;
         default:
             $rota->get("/404");
     }

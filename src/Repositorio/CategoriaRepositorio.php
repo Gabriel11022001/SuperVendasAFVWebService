@@ -79,7 +79,15 @@ class CategoriaRepositorio extends Repositorio implements ICategoriaRepositorio 
         return $categorias;
     }
 
+    // deletar categoria
     public function deletarCategoria(int $categoriaIdDeletar) {
+        $stmt = $this->bancoDados->prepare("DELETE FROM tb_categorias WHERE categoria_id = :categoria_id");
+        $stmt->bindValue(":categoria_id", $categoriaIdDeletar);
+    
+        if (!$stmt->execute()) {
+
+            throw new Exception("Erro ao tentar-se deletar a categoria do produto na base de dados.");
+        }
 
     }
 

@@ -38,4 +38,10 @@ class CategoriaController {
         return $this->categoriaServico->editarCategoria();
     }
 
+    // deletar categoria
+    public function deletarCategoria() {
+
+        return $this->categoriaServico->deletarCategoria();
+    }
+
 }
