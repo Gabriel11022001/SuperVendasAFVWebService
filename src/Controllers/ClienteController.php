@@ -50,4 +50,10 @@ class ClienteController {
         return $this->clienteServico->buscarClientePeloId();
     }
 
+    // filtrar clientes na base de dados
+    public function filtrarClientes() {
+
+        return $this->clienteServico->filtrarClientes();
+    }
+
 }

@@ -16,4 +16,6 @@ interface IClienteServico {
 
     public function buscarClientePeloId();
 
+    public function filtrarClientes();
+
 }

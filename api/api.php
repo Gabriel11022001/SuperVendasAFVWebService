@@ -111,6 +111,18 @@ try {
             // buscar produto pelo id
             $rota->get("/produtos/buscar-pelo-id", ProdutoController::class, "buscarProdutoPeloId");
             break;
+        case "/clientes/alterar-status":
+            // alterar status do cliente
+            $rota->put("/clientes/alterar-status", ClienteController::class, "alterarStatusCliente");
+            break;
+        case "/produtos/editar":
+            // editar produto na base de dados
+            $rota->put("/produtos/editar", ProdutoController::class, "editarProduto");
+            break;
+        case "/clientes/filtrar":
+            // filtrar clientes
+            $rota->get("/clientes/filtrar", ClienteController::class, "filtrarClientes");
+            break;
         default:
             $rota->get("/404");
     }

@@ -3,6 +3,7 @@
 namespace Repositorio;
 
 use Models\Cliente;
+use Models\FiltroClientes;
 
 interface IClienteRepositorio extends IRepositorio {
 
@@ -21,5 +22,7 @@ interface IClienteRepositorio extends IRepositorio {
     function buscarClientePeloEmailPrincipal(string $emailPrincipal);
 
     function buscarClientePeloTelefonePrincipal(string $telefonePrincipal);
+
+    function filtrarClientes(FiltroClientes $filtroClientes);
 
 }

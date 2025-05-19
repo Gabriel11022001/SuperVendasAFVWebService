@@ -5,8 +5,10 @@ namespace Servico;
 use Exception;
 use Models\Cliente;
 use Models\Endereco;
+use Models\FiltroClientes;
 use Repositorio\ClienteRepositorio;
 use Repositorio\IClienteRepositorio;
+use Utils\Resposta;
 use Utils\Validadores\ValidaDadosCadastroCliente;
 
 class ClienteServico extends ServicoBase implements IClienteServico {
@@ -257,7 +259,67 @@ class ClienteServico extends ServicoBase implements IClienteServico {
 
     }
 
+    // alterar o status do cliente
     public function alterarStatusCliente() {
+
+        try {
+            $clienteId = getParametro("cliente_id");
+            $status = getParametro("status");
+
+            if (empty($clienteId)) {
+                Resposta::response(false, "Informe o id do cliente.");
+            }
+
+            // validar se existe um cliente cadastrado na base de dados com o id informado
+            if (empty($this->clienteRepositorio->buscarClientePeloId($clienteId))) {
+                Resposta::response(false, "Cliente não encontrado.");
+            }
+
+            $this->clienteRepositorio->alterarStatusCliente($clienteId, $status);
+
+            Resposta::response(true, "Status do cliente alterado com sucesso.");
+        } catch (Exception $e) {
+            Resposta::response(false, "Erro ao tentar-se alterar o status do cliente.");
+        }
+
+    }
+
+    // filtrar clientes
+    public function filtrarClientes() {
+
+        try {
+            $filtro = new FiltroClientes();
+            $filtro->setParametrosPaginacao(
+                getParametro("pagina_atual"),
+                getParametro("elementos_por_pagina")
+            );
+            $filtro->tipoPessoa = getParametro("tipo_pessoa");
+            $filtro->telefone = getParametro("telefone");
+            $filtro->email = getParametro("email");
+            $filtro->status = getParametro("status");
+            $filtro->nomeCompleto = getParametro("nome_completo");
+            $filtro->dataNascimentoInicio = getParametro("data_nascimento_inicio");
+            $filtro->dataNascimentoFinal = getParametro("data_nascimento_final");
+            $filtro->razaoSocial = getParametro("razao_social");
+            $filtro->cnpj = getParametro("cnpj");
+
+            $errosFiltro = $filtro->validar();
+
+            if (!empty($errosFiltro)) {
+                Resposta::response(false, "Erros nos filtro.", $errosFiltro);
+            }
+
+            $clientes = $this->clienteRepositorio->filtrarClientes($filtro);
+
+            if (count($clientes) > 0) {
+                Resposta::response(true, "Clientes encontrados com sucesso.", $clientes);
+            } else {
+                Resposta::response(true, "Não existem clientes cadastrados na base de dados.", []);
+            }
+
+        } catch (Exception $e) {
+            Resposta::response(false, "Erro ao tentar-se filtrar os clientes.");
+        }
         
     }
 

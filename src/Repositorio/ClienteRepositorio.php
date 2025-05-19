@@ -5,6 +5,7 @@ namespace Repositorio;
 use Exception;
 use Models\Cliente;
 use Models\Endereco;
+use Models\FiltroClientes;
 use PDO;
 use Utils\MapearArrayClientesEmListaObjetosCliente;
 use Utils\ObterQueryCadastroCliente;
@@ -216,6 +217,14 @@ class ClienteRepositorio extends Repositorio implements IClienteRepositorio {
 
     // alterar status do cliente na base de dados
     public function alterarStatusCliente(int $idClienteAlterarStatus, bool $novoStatus) {
+        $stmt = $this->bancoDados->prepare("UPDATE tb_clientes SET status = :status WHERE cliente_id = :cliente_id");
+        $stmt->bindValue(":status", $novoStatus, PDO::PARAM_BOOL);
+        $stmt->bindValue(":cliente_id", $idClienteAlterarStatus);
+
+        if (!$stmt->execute()) {
+
+            throw new Exception("Erro ao tentar-se alterar o status do cliente.");
+        }
 
     }
 
@@ -278,6 +287,68 @@ class ClienteRepositorio extends Repositorio implements IClienteRepositorio {
             return null;
         }
 
+    }
+
+    // filtrar clientes na base de dados
+    public function filtrarClientes(FiltroClientes $filtroClientes) {
+        $query = "SELECT * FROM tb_clientes WHERE 1=1 ";
+
+        if (!empty($filtroClientes->tipoPessoa)) {
+            $query .= " AND tipo_pessoa = '$filtroClientes->tipoPessoa' ";
+        }
+
+        if (!empty($filtroClientes->telefone)) {
+            $query .= " AND (telefone_principal LIKE '%$filtroClientes->telefone%' OR telefone_secundario LIKE '%$filtroClientes->telefone%') ";
+        }
+
+        if (!empty($filtroClientes->email)) {
+            $query .= " AND (email_principal LIKE '%$filtroClientes->email%' OR email_secundario LIKE '%$filtroClientes->email%') ";
+        }
+
+        if ($filtroClientes->status != null) {
+            $query .= " AND status = $filtroClientes->status ";
+        }
+
+        if (!empty($filtroClientes->nomeCompleto)) {
+            $query .= " AND nome_completo LIKE '%$filtroClientes->nomeCompleto%' ";
+        }
+
+        if (!empty($filtroClientes->cpf)) {
+            $query .= " AND cpf LIKE '%$filtroClientes->cpf%' ";
+        }
+
+        if (!empty($filtroClientes->numeroDocumento)) {
+            $query .= " AND numero_documento LIKE '%$filtroClientes->numeroDocumento%' ";
+        }
+
+        if (!empty($filtroClientes->dataNascimentoInicio) && !empty($filtroClientes->dataNascimentoFinal)) {
+            $query .= " AND data_nascimento IS NOT NULL AND data_nascimento >= $filtroClientes->dataNascimentoInicio AND data_nascimento <= $filtroClientes->dataNascimentoFinal ";
+        }
+
+        if (!empty($filtroClientes->razaoSocial)) {
+            $query .= " AND razao_social LIKE '%$filtroClientes->razaoSocial%' ";
+        }
+
+        if (!empty($filtroClientes->cnpj)) {
+            $query .= " AND cnpj LIKE '%$filtroClientes->cnpj%' ";
+        }
+
+        $offset = ($filtroClientes->paginaAtual - 1) * $filtroClientes->elementosPorPagina;
+
+        $query .= " LIMIT $filtroClientes->elementosPorPagina OFFSET $offset";
+
+        $stmt = $this->bancoDados->prepare($query);
+
+        $stmt->execute();
+        $clientesArray = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        for ($i = 0; $i < count($clientesArray); $i++) {
+            $clienteId = $clientesArray[$i]["cliente_id"];
+            $enderecosCliente = $this->obterEnderecosCliente($clienteId);
+            $clientesArray[$i]["enderecos"] = $enderecosCliente;
+        }
+
+        return MapearArrayClientesEmListaObjetosCliente::mapear($clientesArray);
     }
 
 }

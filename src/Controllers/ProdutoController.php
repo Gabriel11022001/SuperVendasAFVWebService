@@ -44,4 +44,10 @@ class ProdutoController {
         return $this->produtoServico->buscarProdutoPeloId();
     }
 
+    // editar produto
+    public function editarProduto() {
+
+        return $this->produtoServico->editarProduto();
+    }
+
 }

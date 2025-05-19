@@ -42,8 +42,31 @@ class ProdutoRepositorio extends Repositorio implements IProdutoRepositorio {
         $produtoCadastrar->produtoId = $this->bancoDados->lastInsertId();
     }
 
+    // editar produto
     public function editarProduto(Produto $produtoEditar) {
-        
+        $stmt = $this->bancoDados->prepare("UPDATE tb_produtos SET nome = :nome, status = :status, preco_compra = :preco_compra,
+        preco_venda = :preco_venda, data_vencimento = :data_vencimento, categoria_id = :categoria_id,
+        url_foto_produto = :url_foto_produto, descricao = :descricao, unidades_estoque = :unidades_estoque,
+        percentual_desconto = :percentual_desconto
+        WHERE produto_id = :produto_id");
+
+        $stmt->bindValue(":produto_id", $produtoEditar->produtoId);
+        $stmt->bindValue(":nome", $produtoEditar->nome);
+        $stmt->bindValue(":status", $produtoEditar->status);
+        $stmt->bindValue(":preco_compra", $produtoEditar->precoCompra);
+        $stmt->bindValue(":preco_venda", $produtoEditar->precoVenda);
+        $stmt->bindValue(":data_vencimento", empty($produtoEditar->dataVencimento) ? null : $produtoEditar->dataVencimento->format("Y-m-d"));
+        $stmt->bindValue(":categoria_id", $produtoEditar->categoriaId);
+        $stmt->bindValue(":descricao", $produtoEditar->descricao);
+        $stmt->bindValue(":unidades_estoque", $produtoEditar->unidadesEstoque);
+        $stmt->bindValue(":url_foto_produto", $produtoEditar->urlFotoProduto);
+        $stmt->bindValue(":percentual_desconto", $produtoEditar->percentualDesconto);
+
+        if (!$stmt->execute()) {
+
+            throw new Exception("Erro ao tentar-se editar o produto.");
+        }
+
     }
 
     public function deletarProduto(int $idProdutoDeletar) {
@@ -112,7 +135,13 @@ class ProdutoRepositorio extends Repositorio implements IProdutoRepositorio {
                 $produto->precoCompra = $prodArray["preco_compra"];
                 $produto->precoVenda = $prodArray["preco_venda"];
                 $produto->dataEntradaEstoque = empty($prodArray["data_entrada_estoque"]) ? null : new DateTime($prodArray["data_entrada_estoque"]);
-                $produto->dataVencimento = empty($prodArray["data_vencimento"]) ? null : new DateTime($prodArray["data_vencimento"]);
+
+                if (empty($prodArray["data_vencimento"])) {
+                    $produto->dataVencimento = null;
+                } else {
+                    $produto->dataVencimento = new DateTime($prodArray["data_vencimento"]);
+                }
+
                 $produto->unidadesEstoque = $prodArray["unidades_estoque"];
                 $produto->categoriaId = $prodArray["categoria_id"];
                 $produto->urlFotoProduto = $prodArray["url_foto_produto"];
@@ -267,7 +296,7 @@ class ProdutoRepositorio extends Repositorio implements IProdutoRepositorio {
         $produto->produtoId = $produtoArray["produto_id"];
         $produto->nome = $produtoArray["nome"];
         $produto->descricao = $produtoArray["descricao"];
-        $produto->status = $produtoArray["array"];
+        $produto->status = $produtoArray["status"];
         $produto->categoriaId = $produtoArray["categoria_id"];
         $produto->precoCompra = $produtoArray["preco_compra"];
         $produto->precoVenda = $produtoArray["preco_venda"];

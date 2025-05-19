@@ -4,7 +4,6 @@ namespace Servico;
 
 use DateTime;
 use Exception;
-use LDAP\Result;
 use Models\FiltroProdutos;
 use Models\Produto;
 use Repositorio\CategoriaRepositorio;
@@ -146,8 +145,142 @@ class ProdutoServico extends ServicoBase implements IProdutoServico {
 
     }
 
+    // editar produto
     public function editarProduto() {
         
+        try {
+            $produtoId = getParametro("produto_id");
+            $nomeProduto = getParametro("nome_produto");
+            $descricao = getParametro("descricao");
+            $status = getParametro("status");
+            $precoCompra = getParametro("preco_compra");
+            $precoVenda = getParametro("preco_venda");
+            $estoque = getParametro("estoque");
+            $categoriaId = getParametro("categoria_id");
+            $percentualDesconto = getParametro("percentual_desconto");
+            $urlFotoProduto = getParametro("url_foto_produto");
+            $dataVencimento = getParametro("data_vencimento");
+
+            $errosCampos = $this->validarDadosEdicaoProduto([
+                "nome" => $nomeProduto,
+                "descricao" => $descricao,
+                "preco_compra" => $precoCompra,
+                "preco_venda" => $precoVenda,
+                "estoque" => $estoque,
+                "categoria_id" => $categoriaId,
+                "percentual_desconto" => $percentualDesconto,
+                "data_vencimento" => $dataVencimento,
+                "produto_id" => $produtoId
+            ]);
+
+            if (!empty($errosCampos)) {
+                Resposta::response(false, "Erros nos campos.", $errosCampos);
+            }
+
+            // validar se existe a categoria
+            if (empty($this->categoriaRepositorio->buscarCategoriaPeloId($categoriaId))) {
+                Resposta::response(false, "Categoria não encontrada.");
+            }
+
+            // validar se existe o produto cadastrado com o id informado
+            $produtoEditar = $this->produtoRepositorio->buscarProdutoPeloId($produtoId);
+
+            if (empty($produtoEditar)) {
+                Resposta::response(false, "Não existe um produto cadastrado com o id informado.");
+            }
+
+            // validar se já existe outro produto cadastrado com o mesmo nome
+            $produtoCadastradoComMesmoNome = $this->produtoRepositorio->buscarProdutoPeloNome($nomeProduto);
+
+            if (!empty($produtoCadastradoComMesmoNome)) {
+
+                if ($produtoCadastradoComMesmoNome->produtoId != $produtoId) {
+                    Resposta::response(false, "Existe outro produto cadastrado com o nome em questão na base de dados.");
+                }
+
+            }
+
+            $produtoEditar->nome = $nomeProduto;
+            $produtoEditar->descricao = $descricao;
+            $produtoEditar->status = $status;
+            $produtoEditar->precoCompra = $precoCompra;
+            $produtoEditar->precoVenda = $precoVenda;
+            $produtoEditar->unidadesEstoque = $estoque;
+            $produtoEditar->categoriaId = $categoriaId;
+            $produtoEditar->percentualDesconto = $percentualDesconto;
+            $produtoEditar->urlFotoProduto = $urlFotoProduto;
+            
+            if (empty($dataVencimento)) {
+                $produtoEditar->dataVencimento = null;
+            } else {
+                $produtoEditar->dataVencimento = new DateTime($dataVencimento);
+            }
+
+            $this->produtoRepositorio->editarProduto($produtoEditar);
+
+            Resposta::response(true, "Produto editado com sucesso.", $produtoEditar);
+        } catch (Exception $e) {
+            Resposta::response(false, "Erro ao tentar-se editar o produto.");
+        }
+
+    }
+
+    private function validarDadosEdicaoProduto(array $dados = []) {
+        $erros = [];
+
+        if (empty($dados["nome"])) {
+            $erros["nome"] = "Informe o nome do produto.";
+        }
+
+        if (empty($dados["descricao"])) {
+            $erros["descricao"] = "Informe a descrição do produto.";
+        }
+
+        if (empty($dados["preco_compra"]) && $dados["preco_compra"] != 0) {
+            $erros["preco_compra"] = "Informe o preço de compra do produto.";
+        } elseif ($dados["preco_compra"] < 0) {
+            $erros["preco_compra"] = "Preço de compra inválido.";
+        }
+
+        if (empty($dados["preco_venda"]) && $dados["preco_venda"] != 0) {
+            $erros["preco_venda"] = "Informe o preço de venda do produto.";
+        } elseif ($dados["preco_venda"] < 0) {
+            $erros["preco_venda"] = "Preço de venda inválido.";
+        }
+
+        if (!empty($dados["preco_compra"]) && !empty($dados["preco_venda"]) && $dados["preco_compra"] > $dados["preco_venda"]) {
+            $erros["preco_venda"] = "O preço de compra não deve ser maior que o preço de venda.";
+        }
+
+        if (!empty($dados["percentual_desconto"]) && ($dados["percentual_desconto"] < 0 || $dados["percentual_desconto"] > 100)) {
+            $erros["percentual_desconto"] = "Percentual de desconto inválido.";
+        }
+
+        if (empty($dados["estoque"]) && $dados["estoque"] != 0) {
+            $erros["estoque"] = "Informe a quantidade de unidades em estoque do produto.";
+        } elseif ($dados["estoque"] < 0) {
+            $erros["estoque"] = "Unidades em estoque do produto inválido.";
+        }
+
+        if (!empty($dados["data_vencimento"])) {
+            $dataVencimento = new DateTime($dados["data_vencimento"]);
+            $dataAtual = new DateTime("now");
+
+            if ($dataVencimento < $dataAtual) {
+                $erros["data_vencimento"] = "Data de vencimento inválida.";
+            }
+
+        }
+
+        if (empty($dados["categoria_id"])) {
+            $erros["categoria_id"] = "Informe o id da categoria do produto.";
+        }
+
+        if (empty($dados["produto_id"])) {
+            $erros["produto_id"] = "Informe o id do produto.";
+        }
+
+        return $erros;
     }
 
     public function deletarProduto() {
