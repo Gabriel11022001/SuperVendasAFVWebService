@@ -193,4 +193,68 @@ class CategoriaServico extends ServicoBase implements ICategoriaServico {
 
     }
 
+    // cadastrar multiplas categorias na base de dados
+    public function cadastrarMultiplasCategorias() {
+        $this->categoriaRepositorio->iniciarTransacaoCategoria();
+
+        try {
+            $categorias = getParametro("categorias");
+
+            if (empty($categorias)) {
+                Resposta::response(false, "Informe pelo menos uma categoria.");
+            }
+
+            $categoriasNovas = [];
+
+            foreach ($categorias as $categoriaObj) {
+
+                if (empty($categoriaObj->nome)) {
+                    $this->categoriaRepositorio->rollbackTransacaoCategoria();
+
+                    Resposta::response(false, "Informe o nome da categoria.");
+                }
+
+                $quantidadeVezesApareceuCategoriaMesmoNome = 0;
+
+                foreach ($categorias as $categoriaTeste) {
+
+                    if ($categoriaTeste->nome == $categoriaObj->nome) {
+                        $quantidadeVezesApareceuCategoriaMesmoNome++;
+                    }
+
+                }
+
+                if ($quantidadeVezesApareceuCategoriaMesmoNome > 1) {
+                    $this->categoriaRepositorio->rollbackTransacaoCategoria();
+
+                    Resposta::response(false, "Você informou " . $quantidadeVezesApareceuCategoriaMesmoNome . " vezes a categoria com o nome " . $categoriaObj->nome);
+                }
+
+                // validar se já existe outra categoria cadastrada com o mesmo nome
+                if (!empty($this->categoriaRepositorio->buscarCategoriaPeloNome($categoriaObj->nome))) {
+                    $this->categoriaRepositorio->rollbackTransacaoCategoria();
+
+                    Resposta::response(false, "Já existe outra categoria cadastrada com o mesmo nome na base de dados.");
+                }
+
+                $categoriaCadastrar = new Categoria();
+                $categoriaCadastrar->nome = $categoriaObj->nome;
+                $categoriaCadastrar->status = $categoriaObj->status ? "true" : "false";
+                
+                $this->categoriaRepositorio->cadastrarCategoria($categoriaCadastrar);
+
+                $categoriasNovas[] = $categoriaCadastrar;
+            }
+
+            $this->categoriaRepositorio->comitarTransacaoCategoria();
+
+            Resposta::response(true, "Categorias cadastradas com sucesso.", $categoriasNovas);
+        } catch (Exception $e) {
+            $this->categoriaRepositorio->rollbackTransacaoCategoria();
+
+            Resposta::response(false, "Erro ao tentar-se cadastrar multiplas categorias na base de dados.", $e->getMessage());
+        }
+
+    }
+
 }

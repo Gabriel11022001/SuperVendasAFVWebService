@@ -14,4 +14,6 @@ interface ICategoriaServico {
 
     function buscarCategoriaPeloId();
 
+    function cadastrarMultiplasCategorias();
+
 }

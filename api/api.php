@@ -123,6 +123,10 @@ try {
             // filtrar clientes
             $rota->get("/clientes/filtrar", ClienteController::class, "filtrarClientes");
             break;
+        case "/categorias/cadastrar-multiplas":
+            // cadastrar multiplas categorias na base de dados
+            $rota->post("/categorias/cadastrar-multiplas", CategoriaController::class, "cadastrarMultiplasCategorias");
+            break;
         default:
             $rota->get("/404");
     }

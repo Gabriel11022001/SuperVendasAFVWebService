@@ -44,4 +44,10 @@ class CategoriaController {
         return $this->categoriaServico->deletarCategoria();
     }
 
+    // cadastrar multiplas categorias
+    public function cadastrarMultiplasCategorias() {
+
+        return $this->categoriaServico->cadastrarMultiplasCategorias();
+    }
+
 }

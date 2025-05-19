@@ -13,6 +13,18 @@ class CategoriaRepositorio extends Repositorio implements ICategoriaRepositorio 
         parent::__construct($bancoDados);
     }
 
+    public function iniciarTransacaoCategoria() {
+        $this->iniciarTransacao();
+    }
+
+    public function comitarTransacaoCategoria() {
+        $this->commitarTransacao();
+    }
+
+    public function rollbackTransacaoCategoria() {
+        $this->rollBackTransacao();
+    }
+
     // cadastrar categoria
     public function cadastrarCategoria(Categoria $categoriaCadastrar) {
         $stmt = $this->bancoDados->prepare("INSERT INTO tb_categorias(nome, status) VALUES(:nome, :status)");

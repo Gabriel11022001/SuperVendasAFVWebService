@@ -18,4 +18,10 @@ interface ICategoriaRepositorio {
 
     function buscarCategoriaPeloNome(string $nomeCategoria);
 
+    function iniciarTransacaoCategoria();
+
+    function rollbackTransacaoCategoria();
+
+    function comitarTransacaoCategoria();
+
 }
