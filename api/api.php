@@ -127,6 +127,14 @@ try {
             // cadastrar multiplas categorias na base de dados
             $rota->post("/categorias/cadastrar-multiplas", CategoriaController::class, "cadastrarMultiplasCategorias");
             break;
+        case "/produtos/deletar":
+            // deletar produto na base de dados
+            $rota->delete("/produtos/deletar", ProdutoController::class, "deletarProduto");
+            break;
+        case "/produtos/registrar-saida-estoque":
+            // registrar saida do produto em estoque
+            $rota->put("/produtos/registrar-saida-estoque", ProdutoController::class, "registrarSaidaEstoqueProduto");
+            break;
         default:
             $rota->get("/404");
     }

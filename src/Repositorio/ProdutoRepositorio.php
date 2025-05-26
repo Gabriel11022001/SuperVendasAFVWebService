@@ -69,8 +69,16 @@ class ProdutoRepositorio extends Repositorio implements IProdutoRepositorio {
 
     }
 
+    // deletar produto
     public function deletarProduto(int $idProdutoDeletar) {
-        
+        $stmt = $this->bancoDados->prepare("DELETE FROM tb_produtos WHERE produto_id = :produto_id");
+        $stmt->bindValue(":produto_id", $idProdutoDeletar);
+
+        if (!$stmt->execute()) {
+
+            throw new Exception("Erro ao tentar-se deletar o produto na base de dados.");
+        }
+
     }
 
     // buscar produto pelo id
@@ -86,6 +94,11 @@ class ProdutoRepositorio extends Repositorio implements IProdutoRepositorio {
         $stmt->execute();
 
         $produtoArray = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (empty($produtoArray)) {
+
+            return null;
+        }
 
         $produto = new Produto();
         $produto->produtoId = $idProduto;
@@ -270,8 +283,28 @@ class ProdutoRepositorio extends Repositorio implements IProdutoRepositorio {
         
     }
 
+    // registrar saida de estoque do produto
     public function registrarSaidaProdutoEstoque(int $produtoId, int $unidadesSaida) {
-        
+        $stmt = $this->bancoDados->prepare("SELECT unidades_estoque FROM tb_produtos WHERE produto_id = :produto_id");
+        $stmt->bindValue(":produto_id", $produtoId);
+        $stmt->execute();
+        $produto = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!empty($produto)) {
+            $unidadesEstoque = $produto["unidades_estoque"];
+            $novaQuantidadeUnidadesEstoque = $unidadesEstoque - $unidadesSaida;
+
+            $stmt = $this->bancoDados->prepare("UPDATE tb_produtos SET unidades_estoque = :unidades_estoque WHERE produto_id = :produto_id");
+            $stmt->bindValue(":produto_id", $produtoId);
+            $stmt->bindValue(":unidades_estoque", $novaQuantidadeUnidadesEstoque);
+
+            if (!$stmt->execute()) {
+
+                throw new Exception("Erro ao tentar-se debitar a quantidade de unidades em estoque do produto.");
+            }
+
+        }
+
     }
 
     // buscar produto pelo nome

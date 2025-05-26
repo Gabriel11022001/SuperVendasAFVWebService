@@ -91,3 +91,35 @@ create table tb_produtos(
 	categoria_id integer not null,
 	foreign key(categoria_id) references tb_categorias(categoria_id)
 );
+
+-- criar tabela de leads
+create table tb_leads(
+	lead_id serial primary key,
+	tipo_pessoa text not null,
+	telefone text not null,
+	email text not null,
+	data_cadastro text not null,
+	ativo boolean not null default true,
+	vendedor_id integer not null,
+	nome_completo text,
+	cpf text,
+	data_nascimento text,
+	genero text,
+	nome_pai text,
+	nome_mae text,
+	tipo_documento text,
+	numero_documento text,
+	razao_social text,
+	cnpj text,
+	data_fundacao text,
+	valor_patrimonio decimal
+);
+
+-- criar tabela de status do lead
+create table tb_leads_status(
+	lead_status_id serial primary key,
+	status text not null,
+	data_cadastro text not null,
+	lead_id integer not null,
+	foreign key(lead_id) references tb_leads(lead_id)
+);

@@ -50,4 +50,16 @@ class ProdutoController {
         return $this->produtoServico->editarProduto();
     }
 
+    // deletar produto na base de dados
+    public function deletarProduto() {
+
+        return $this->produtoServico->deletarProduto();
+    }
+
+    // registrar saida do produto em estoque
+    public function registrarSaidaEstoqueProduto() {
+
+        return $this->produtoServico->registrarSaidaProdutoEstoque();
+    }
+
 }

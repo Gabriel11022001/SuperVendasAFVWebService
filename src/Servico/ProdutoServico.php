@@ -283,8 +283,35 @@ class ProdutoServico extends ServicoBase implements IProdutoServico {
         return $erros;
     }
 
+    // deletar produto
     public function deletarProduto() {
         
+        try {
+            
+            if (!isset($_GET["id_produto"])) {
+                Resposta::response(false, "Informe o id do produto na url.");
+            }
+
+            $idProdutoDeletar = trim($_GET["id_produto"]);
+
+            if (empty($idProdutoDeletar)) {
+                Resposta::response(false, "Informe o id do produto na url.");
+            }
+
+            $produtoDeletar = $this->produtoRepositorio->buscarProdutoPeloId($idProdutoDeletar);
+
+            // validar se existe um produto cadastrado com o id informado na base de dados
+            if (empty($produtoDeletar)) {
+                Resposta::response(false, "Produto não encontrado na base de dados.");
+            }
+
+            $this->produtoRepositorio->deletarProduto($idProdutoDeletar);
+
+            Resposta::response(true, "Produto deletado com sucesso.", $produtoDeletar);
+        } catch (Exception $e) {
+            Resposta::response(false, "Erro ao tentar-se deletar o produto.");
+        }
+
     }
 
     // buscar produto pelo id
@@ -412,7 +439,44 @@ class ProdutoServico extends ServicoBase implements IProdutoServico {
         
     }
 
+    // registrar saida do produto do estoque
     public function registrarSaidaProdutoEstoque() {
+        
+        try {
+            $produtoId = getParametro("produto_id");
+            $unidadesRetirada = getParametro("unidades_retirada");
+            $errosCampos = array();
+
+            if (empty($produtoId)) {
+                $errosCampos["produto_id"] = "Informe o id do produto.";
+            }
+
+            if (empty($unidadesRetirada)) {
+                $errosCampos["unidades_retirada"] = "Informe a quantidade de unidades que serão removidas do estoque.";
+            }
+
+            if ($unidadesRetirada <= 0) {
+                Resposta::response(false, "Quantidade de unidades inválida.");
+            }
+
+            $produto = $this->produtoRepositorio->buscarProdutoPeloId($produtoId);
+
+            if (empty($produtoId)) {
+                Resposta::response(false, "Não existe um produto cadastrado com o id informado.");
+            }
+
+            if ($unidadesRetirada > $produto->unidadesEstoque) {
+                Resposta::response(false, "O produto " . $produto->nome . " possui somente " . $produto->unidadesEstoque . " unidades em estoque.");
+            }
+
+            $this->produtoRepositorio->registrarSaidaProdutoEstoque($produtoId, $unidadesRetirada);
+
+            $produto->unidadesEstoque -= $unidadesRetirada;
+
+            Resposta::response(true, "Unidades em estoque retiradas com sucesso.", $produto);
+        } catch (Exception $e) {
+            Resposta::response(false, "Erro ao tentar-se registrar a saida do produto do estoque.");
+        }
         
     }
 
