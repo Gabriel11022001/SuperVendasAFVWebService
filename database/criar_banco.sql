@@ -101,6 +101,7 @@ create table tb_leads(
 	data_cadastro text not null,
 	ativo boolean not null default true,
 	vendedor_id integer not null,
+	vendedor_id_anterior integer,
 	nome_completo text,
 	cpf text,
 	data_nascimento text,

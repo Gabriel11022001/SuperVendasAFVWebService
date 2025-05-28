@@ -60,8 +60,19 @@ class LeadRepositorio extends Repositorio implements ILeadRepositorio {
         
     }
 
-    public function alterarVendedorLead(int $idVendedorNovo, int $idVendedorAnterior) {
-        
+    // alterar o vendedor do lead na base de dados
+    public function alterarVendedorLead(int $idVendedorNovo, int|null $idVendedorAnterior, int $idLead) {
+        $stmt = $this->bancoDados->prepare("UPDATE tb_leads SET vendedor_id = :novo_vendedor_id, vendedor_id_anterior = :vendedor_id_anterior
+        WHERE lead_id = :lead_id");
+        $stmt->bindValue(":lead_id", $idLead);
+        $stmt->bindValue(":novo_vendedor_id", $idVendedorNovo);
+        $stmt->bindValue(":vendedor_id_anterior", $idVendedorAnterior);
+
+        if (!$stmt->execute()) {
+
+            throw new Exception("Erro ao tentar-se alterar o vendedor do lead.");
+        }
+
     }
 
     // buscar lead pelo id
@@ -83,6 +94,7 @@ class LeadRepositorio extends Repositorio implements ILeadRepositorio {
         $lead->email = $leadArray["email"];
         $lead->dataCadastro = new DateTime($leadArray["data_cadastro"]);
         $lead->vendedorId = $leadArray["vendedor_id"];
+        $lead->vendedorIdAnterior = $leadArray["vendedor_id_anterior"];
         $lead->ativo = $leadArray["ativo"];
 
         $lead->nomeCompleto = !empty($leadArray["nome_completo"]) ? $leadArray["nome_completo"] : "";

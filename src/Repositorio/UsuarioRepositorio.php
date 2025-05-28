@@ -217,4 +217,13 @@ class UsuarioRepositorio extends Repositorio implements IUsuarioRepositorio {
         return $permissoes;
     }
 
+    // validar se existe um usuário cadastrado com o id informado
+    public function validarExisteUsuarioComIdInformado(int $idUsuario) {
+        $stmt = $this->bancoDados->prepare("SELECT usuario_id FROM tb_usuarios WHERE usuario_id = :usuario_id");
+        $stmt->bindValue(":usuario_id", $idUsuario);
+        $stmt->execute();
+
+        return !empty($stmt->fetch(PDO::FETCH_ASSOC));
+    }
+
 }

@@ -2,6 +2,7 @@
 
 use Controllers\CategoriaController;
 use Controllers\ClienteController;
+use Controllers\LeadController;
 use Controllers\NivelAcessoController;
 use Controllers\PermissaoController;
 use Controllers\ProdutoController;
@@ -134,6 +135,18 @@ try {
         case "/produtos/registrar-saida-estoque":
             // registrar saida do produto em estoque
             $rota->put("/produtos/registrar-saida-estoque", ProdutoController::class, "registrarSaidaEstoqueProduto");
+            break;
+        case "/leads/cadastrar":
+            // cadastrar lead
+            $rota->post("/leads/cadastrar", LeadController::class, "cadastrarLead");
+            break;
+        case "/leads/remanejar":
+            // remanejar leads
+            $rota->put("/leads/remanejar", LeadController::class, "remanejarLeads");
+            break;
+        case "/leads/buscar-pelo-id":
+            // buscar lead pelo id na base de dados
+            $rota->get("/leads/buscar-pelo-id", LeadController::class, "buscarLeadPeloId");
             break;
         default:
             $rota->get("/404");

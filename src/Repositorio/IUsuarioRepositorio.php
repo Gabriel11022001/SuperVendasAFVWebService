@@ -22,4 +22,6 @@ interface IUsuarioRepositorio {
 
     function buscarUsuarioPeloNome(string $nome);
 
+    function validarExisteUsuarioComIdInformado(int $idUsuario);
+
 }

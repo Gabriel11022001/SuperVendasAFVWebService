@@ -13,7 +13,7 @@ interface ILeadRepositorio {
 
     function deletarLead(Lead $leadDeletar);
 
-    function alterarVendedorLead(int $idVendedorNovo, int $idVendedorAnterior);
+    function alterarVendedorLead(int $idVendedorNovo, int|null $idVendedorAnterior, int $idLead);
 
     function buscarLeadPeloId(int $idLeadConsultar);
 

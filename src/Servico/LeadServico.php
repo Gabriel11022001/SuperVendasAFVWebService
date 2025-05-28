@@ -7,14 +7,21 @@ use Exception;
 use Models\Lead;
 use Models\LeadStatus;
 use Repositorio\ILeadRepositorio;
+use Repositorio\IUsuarioRepositorio;
 use Repositorio\LeadRepositorio;
+use Repositorio\UsuarioRepositorio;
 use Utils\Constantes;
 use Utils\Resposta;
 
 class LeadServico extends ServicoBase implements ILeadServico {
 
     private ILeadRepositorio $leadRepositorio;
+    private IUsuarioRepositorio $usuarioRepositorio;
     private Constantes $constantes;
+    private array $generos = [
+        "Masculino",
+        "Feminino"
+    ];
 
     public function __construct()
     {
@@ -22,6 +29,7 @@ class LeadServico extends ServicoBase implements ILeadServico {
 
         $this->constantes = new Constantes();
         $this->leadRepositorio = new LeadRepositorio($this->bancoDados);
+        $this->usuarioRepositorio = new UsuarioRepositorio($this->bancoDados);
     }
 
     private function validarCamposCadastroLead($camposValidar) {
@@ -32,6 +40,10 @@ class LeadServico extends ServicoBase implements ILeadServico {
             $errosCampos["tipo_pessoa"] = "Tipo de pessoa inválido.";
         } else {
 
+            if (empty($camposValidar["vendedor_id"])) {
+                $errosCampos["vendedor_id"] = "Informe o id do vendedor.";
+            }
+
             if (empty($camposValidar["telefone"])) {
                 $errosCampos["telefone"] = "Informe o telefone.";
             }
@@ -40,6 +52,7 @@ class LeadServico extends ServicoBase implements ILeadServico {
                 $errosCampos["email"] = "Informe o e-mail.";
             }
 
+            // validar campos da pessoa fisica
             if ($camposValidar["tipo_pessoa"] === $this->constantes->pf) {
 
                 if (empty($camposValidar["nome_completo"])) {
@@ -58,8 +71,22 @@ class LeadServico extends ServicoBase implements ILeadServico {
                     
                 }
 
-            } else {
+                if (empty($camposValidar["genero"])) {
+                    $errosCampos["genero"] = "Informe o gênero.";
+                } elseif (!in_array($camposValidar["genero"], $this->generos)) {
+                    $errosCampos["genero"] = "Gênero inválido.";
+                }
 
+                if (empty($camposValidar["tipo_documento"])) {
+                    $errosCampos["tipo_documento"] = "Informe o tipo de documento.";
+                }
+
+                if (empty($camposValidar["numero_documento"])) {
+                    $errosCampos["numero_documento"] = "Informe o número do documento.";
+                }
+
+            } else {
+                // validar campos da pessoa juridica
             }
 
         }
@@ -98,37 +125,42 @@ class LeadServico extends ServicoBase implements ILeadServico {
                 "cpf" => $cpf,
                 "data_nascimento" => $dataNascimento,
                 "genero" => $genero,
-                "nome_pai" => $nomePai,
-                "nome_mae" => $nomeMae,
                 "tipo_documento" => $tipoDocumento,
                 "numero_documento" => $numeroDocumento,
                 "razao_social" => $razaoSocial,
                 "cnpj" => $cnpj,
                 "data_fundacao" => $dataFundacao,
-                "valor_patrimonio" => $valorPatrimonio 
+                "valor_patrimonio" => $valorPatrimonio ,
+                "vendedor_id" => $vendedorId
             ]);
 
             if (!empty($errosCampos)) {
                 Resposta::response(false, "Erros nos campos.", $errosCampos);
             }
 
-            if ($tipoPessoa === $this->constantes->pf) {
-                // cadastrar lead pf
+            // validar se existe um usuário cadastrado com o id informado
+            if (!$this->usuarioRepositorio->validarExisteUsuarioComIdInformado($vendedorId)) {
+                Resposta::response(false, "Vendedor não encontrado na base de dados.");
+            }
 
-                // validar se já existe outro lead cadastrado com o mesmo cpg na base de dados
+            // validar se já existe outro lead cadastrado com o mesmo e-mail na base de dadas
+            if (!empty($this->leadRepositorio->buscarLeadPeloEmail($email))) {
+                Resposta::response(false, "Já existe outro lead cadastrado com o mesmo e-mail na base de dados.");
+            }
+
+            // cadastrar lead pf
+            if ($tipoPessoa === $this->constantes->pf) {
+
+                // validar se já existe outro lead cadastrado com o mesmo cpf na base de dados
                 if (!empty($this->leadRepositorio->buscarLeadCpf($cpf))) {
                     Resposta::response(false, "Já existe outro lead cadastrado com o mesmo cpf na base de dados.");
-                }
-
-                // validar se já existe outro lead cadastrado com o mesmo e-mail na base de dadas
-                if (!empty($this->leadRepositorio->buscarLeadPeloEmail($email))) {
-                    Resposta::response(false, "Já existe outro lead cadastrado com o mesmo e-mail na base de dados.");
                 }
 
                 $leadCadastrar = new Lead();
                 $leadCadastrar->tipoPessoa = $tipoPessoa;
                 $leadCadastrar->telefone = $telefone;
                 $leadCadastrar->email = $email;
+                $leadCadastrar->cpf = $cpf;
                 $leadCadastrar->ativo = $ativo;
                 $leadCadastrar->dataCadastro = new DateTime("now");
                 $leadCadastrar->vendedorId = $vendedorId;
@@ -155,7 +187,7 @@ class LeadServico extends ServicoBase implements ILeadServico {
         } catch (Exception $e) {
             $this->bancoDados->rollBack();
 
-            Resposta::response(false, "Erro ao tentar-se cadastrar o lead.");
+            Resposta::response(false, "Erro ao tentar-se cadastrar o lead.", $e->getMessage());
         }
 
     }
@@ -181,12 +213,90 @@ class LeadServico extends ServicoBase implements ILeadServico {
         
     }
 
+    // remanejar leads para outro vendedor
     public function remanejarLeads() {
-        
+        $this->bancoDados->beginTransaction();
+
+        try {
+            $vendedorId = getParametro("vendedor_id");
+            $leads = getParametro("leads");
+
+            if (empty($vendedorId)) {
+                Resposta::response(false, "Informe o id do vendedor.");
+            }
+
+            if (empty($leads)) {
+                Resposta::response(false, "Informe os leads que serão remanejados.");
+            }
+
+            // validar se existe um vendedor cadastrado com o id informado na base de dados
+            if (empty($this->usuarioRepositorio->validarExisteUsuarioComIdInformado($vendedorId))) {
+                Resposta::response(false, "Vendedor não encontrado na base de dados.");
+            }
+
+            $leadsForamRemanejados = [];
+            $leadsNaoForamRemanejados = [];
+
+            foreach ($leads as $leadId) {
+                $lead = $this->leadRepositorio->buscarLeadPeloId($leadId);
+
+                if (empty($lead)) {
+                    $leadsNaoForamRemanejados[] = [
+                        "motivo" => "Lead não encontrado na base de dados",
+                        "id_lead" => $leadId
+                    ];
+                } else {
+                    $this->leadRepositorio->alterarVendedorLead($vendedorId, $lead->vendedorIdAnterior, $leadId);
+
+                    $leadsForamRemanejados[] = [
+                        "id_lead" => $leadId,
+                        "nome_lead" => $lead->tipoPessoa === "pf" ? $lead->nomeCompleto : $lead->razaoSocial,
+                        "documento" => $lead->tipoPessoa === "pf" ? $lead->cpf : $lead->cnpj
+                    ];
+                }
+
+            }
+
+            $this->bancoDados->commit();
+
+            Resposta::response(true, "Remanejamento de leads realizado com sucesso.", [
+                "leads_remanejados" => $leadsForamRemanejados,
+                "leads_nao_foram_remanejados" => $leadsNaoForamRemanejados
+            ]);
+        } catch (Exception $e) {
+            $this->bancoDados->rollBack();
+
+            Resposta::response(false, "Erro ao tentar-se remanejar os leads.");
+        }
+
     }
 
+    // buscar lead pelo id
     public function buscarLeadPeloId() {
         
+        try {
+
+            if (!isset($_GET["lead_id"])) {
+                Resposta::response(false, "Informe o id do lead na url.");
+            }
+
+            if (empty($_GET["lead_id"])) {
+                Resposta::response(false, "Informe o id do lead.");
+            }
+
+            $idLead = trim($_GET["lead_id"]);
+
+            $lead = $this->leadRepositorio->buscarLeadPeloId($idLead);
+
+            if (empty($lead)) {
+                Resposta::response(false, "Lead não encontrado.");
+            }
+
+            Resposta::response(true, "Lead encontrado com sucesso.", $lead);
+        } catch (Exception $e) {
+            Resposta::response(false, "Lead não encontrado na base de dados.");
+        }
+
     }
 
     public function buscarLeads() {
