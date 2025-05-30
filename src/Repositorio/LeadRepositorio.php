@@ -56,8 +56,25 @@ class LeadRepositorio extends Repositorio implements ILeadRepositorio {
         
     }
 
+    // deletar lead na base de dados
     public function deletarLead(Lead $leadDeletar) {
-        
+        // deletar os status do lead
+        $stmt = $this->bancoDados->prepare("DELETE FROM tb_leads_status WHERE lead_id = :lead_id");
+        $stmt->bindValue(":lead_id", $leadDeletar->leadId);
+
+        if (!$stmt->execute()) {
+
+            throw new Exception("Erro ao tentar-se deletar os status do lead na base de dados.");
+        }
+
+        $stmt = $this->bancoDados->prepare("DELETE FROM tb_leads WHERE lead_id = :lead_id");
+        $stmt->bindValue(":lead_id", $leadDeletar->leadId);
+
+        if (!$stmt->execute()) {
+
+            throw new Exception("Erro ao tentar-se deletar o lead.");
+        }
+
     }
 
     // alterar o vendedor do lead na base de dados
@@ -139,8 +156,44 @@ class LeadRepositorio extends Repositorio implements ILeadRepositorio {
         return $statusLead;
     }
 
+    // buscar leads
     public function buscarLeads(int $idVendedor, int $paginaAtual, int $elementosPorPagina) {
-        
+        $stmt = $this->bancoDados->prepare("SELECT * FROM tb_leads WHERE vendedor_id = :vendedor_id LIMIT :elementos_por_pagina OFFSET :pagina_atual");
+        $stmt->bindValue(":vendedor_id", $idVendedor);
+        $stmt->bindValue(":elementos_por_pagina", $elementosPorPagina);
+        $stmt->bindValue(":pagina_atual", ($paginaAtual - 1) * $elementosPorPagina);
+        $stmt->execute();
+        $leads = array();
+
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $leadArray) {
+            $lead = new Lead();
+            $lead->leadId = $leadArray["lead_id"];
+            $lead->tipoPessoa = $leadArray["tipo_pessoa"];
+            $lead->telefone = $leadArray["telefone"];
+            $lead->email = $leadArray["email"];
+            $lead->dataCadastro = !empty($leadArray["data_cadastro"]) ? new DateTime($leadArray["data_cadastro"]) : null;
+            $lead->ativo = $leadArray["ativo"];
+            $lead->vendedorId = $leadArray["vendedor_id"];
+            $lead->vendedorIdAnterior = $leadArray["vendedor_id_anterior"];
+            $lead->nomeCompleto = empty($leadArray["nome_completo"]) ? "" : $leadArray["nome_completo"];
+            $lead->cpf = empty($leadArray["cpf"]) ? "" : $leadArray["cpf"];
+            $lead->genero = empty($leadArray["genero"]) ? "" : $leadArray["genero"];
+            $lead->nomePai = empty($leadArray["nome_pai"]) ? "" : $leadArray["nome_pai"];
+            $lead->nomeMae = empty($leadArray["nome_mae"]) ? "" : $leadArray["nome_mae"];
+            $lead->tipoDocumento = empty($leadArray["tipo_documento"]) ? "" : $leadArray["tipo_documento"];
+            $lead->numeroDocumento = empty($leadArray["numero_documento"]) ? "" : $leadArray["numero_documento"];
+            $lead->dataNascimento = empty($leadArray["data_nascimento"]) ? null : new DateTime($leadArray["data_nascimento"]);
+            $lead->razaoSocial = empty($leadArray["razao_social"]) ? "" : $leadArray["razao_social"];
+            $lead->cnpj = empty($leadArray["cnpj"]) ? "" : $leadArray["cnpj"];
+            $lead->dataFundacao = empty($leadArray["data_fundacao"]) ? null : new DateTime($leadArray["data_fundacao"]);
+            $lead->valorPatrimonio = $leadArray["valor_patrimonio"];
+
+            $lead->statusLead = $this->buscarHistoricoStatusLead($lead->leadId);
+
+            $leads[] = $lead;
+        }
+
+        return $leads;
     }
 
     // registrar o status do lead

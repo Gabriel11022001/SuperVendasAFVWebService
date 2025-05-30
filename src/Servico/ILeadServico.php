@@ -16,4 +16,6 @@ interface ILeadServico {
 
     function remanejarLeads();
 
+    function registrarStatusLead();
+
 }

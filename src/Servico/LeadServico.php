@@ -209,8 +209,38 @@ class LeadServico extends ServicoBase implements ILeadServico {
         
     }
 
+    // deletar lead
     public function deletarLead() {
+        $this->bancoDados->beginTransaction();
+
+        try {
         
+            if (!isset($_GET["lead_id"])) {
+                Resposta::response(false, "Informe o id do lead na url.");
+            }
+
+            if (empty($_GET["lead_id"])) {
+                Resposta::response(false, "Informe o id do lead na url para deleção.");
+            }
+
+            $idLeadDeletar = $_GET["lead_id"];
+            $lead = $this->leadRepositorio->buscarLeadPeloId($idLeadDeletar);
+
+            if (empty($lead)) {
+                Resposta::response(false, "Lead não encontrado.");
+            }
+
+            $this->leadRepositorio->deletarLead($lead);
+
+            $this->bancoDados->commit();
+
+            Resposta::response(true, "Lead deletado com sucesso.");
+        } catch (Exception $e) {
+            $this->bancoDados->rollBack();
+
+            Resposta::response(false, "Erro ao tentar-se deletar o lead na base de dados.");
+        }
+
     }
 
     // remanejar leads para outro vendedor
@@ -299,8 +329,90 @@ class LeadServico extends ServicoBase implements ILeadServico {
 
     }
 
+    // buscar leads do vendedor
     public function buscarLeads() {
         
+        try {
+            
+            if (!isset($_GET["pagina_atual"]) || !isset($_GET["elementos_por_pagina"]) || !isset($_GET["id_vendedor"])) {
+                Resposta::response(false, "Informe a pagina atual, a quantidade de elementos por pagina e o id do vendedor na url.");
+            }
+
+            $paginaAtual = 0;
+            $elementosPorPagina = 0;
+
+            if (empty($_GET["pagina_atual"]) || $_GET["pagina_atual"] <= 0) {
+                $paginaAtual = 1;
+            } else {
+                $paginaAtual = $_GET["pagina_atual"];
+            }
+
+            if (empty($_GET["elementos_por_pagina"]) || ($_GET["elementos_por_pagina"] <= 0 || $_GET["elementos_por_pagina"] > 10)) {
+                $elementosPorPagina = 5;
+            } else {
+                $elementosPorPagina = $_GET["elementos_por_pagina"];
+            }
+
+            $vendedorId = $_GET["id_vendedor"];
+
+            // validar se existe um vendedor cadastrado com o id informado
+            if (empty($this->usuarioRepositorio->validarExisteUsuarioComIdInformado($vendedorId))) {
+                Resposta::response(false, "Não existe um vendedor cadastrado com o id informado.");
+            }
+
+            $leadsVendedor = $this->leadRepositorio->buscarLeads($vendedorId, $paginaAtual, $elementosPorPagina);
+
+            if (count($leadsVendedor) == 0) {
+                Resposta::response(true, "Não existem leads cadastrados para o vendedor logado.", array());
+            }
+
+            Resposta::response(true, "Leads listados com sucesso.", $leadsVendedor);
+        } catch (Exception $e) {
+            Resposta::response(false, "Erro ao tentar-se listar os leads.");
+        }
+
+    }
+
+    // registrar status do lead
+    public function registrarStatusLead() {
+
+        try {
+            $leadId = getParametro("lead_id");
+            $novoStatus = getParametro("status");
+
+            if (empty($leadId)) {
+                Resposta::response(false, "Informe o id do lead.");
+            }
+
+            if (empty($novoStatus)) {
+                Resposta::response(false, "Informe o status do lead.");
+            }
+
+            if ($novoStatus != $this->constantes->statusLeadAQualificar
+            && $novoStatus != $this->constantes->statusLeadQualificado
+            && $novoStatus != $this->constantes->statusLeadDesqualificado
+            && $novoStatus != $this->constantes->statusLeadCliente
+            && $novoStatus != $this->constantes->statusLeadEmNegociacao
+            && $novoStatus != $this->constantes->statusLeadPerdido) {
+                Resposta::response(false, "Status inválido.");
+            }
+
+            if ($this->leadRepositorio->buscarLeadPeloId($leadId) == null) {
+                Resposta::response(false, "Não existe um lead cadastrado com esse id na base de dados.");
+            }
+
+            $status = new LeadStatus();
+            $status->leadId = $leadId;
+            $status->dataCadastroStatus = new DateTime("now");
+            $status->status = $novoStatus;
+
+            $this->leadRepositorio->registrarStatusLead($status);
+
+            Resposta::response(true, "O status " . $novoStatus . " foi registrado para o lead com sucesso.", $status);
+        } catch (Exception $e) {
+            Resposta::response(false, "Erro ao tentar-se registrar o status para o lead.");
+        }
+
     }
 
 }

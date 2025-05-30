@@ -32,4 +32,22 @@ class LeadController {
         return $this->leadServico->buscarLeadPeloId();
     }
 
+    // buscar leads
+    public function buscarLeads() {
+
+        return $this->leadServico->buscarLeads();
+    }
+
+    // deletar lead na base de dados
+    public function deletarLead() {
+
+        return $this->leadServico->deletarLead();
+    }
+
+    // registrar status do lead
+    public function registrarStatusLead() {
+
+        return $this->leadServico->registrarStatusLead();
+    }
+
 }

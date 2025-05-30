@@ -144,9 +144,21 @@ try {
             // remanejar leads
             $rota->put("/leads/remanejar", LeadController::class, "remanejarLeads");
             break;
+        case "/leads/deletar":
+            // deletar lead
+            $rota->delete("/leads/deletar", LeadController::class, "deletarLead");
+            break;
         case "/leads/buscar-pelo-id":
             // buscar lead pelo id na base de dados
             $rota->get("/leads/buscar-pelo-id", LeadController::class, "buscarLeadPeloId");
+            break;
+        case "/leads":
+            // buscar leads
+            $rota->get("/leads", LeadController::class, "buscarLeads");
+            break;
+        case "/leads/registrar-status":
+            // registrar o status do lead
+            $rota->post("/leads/registrar-status", LeadController::class, "registrarStatusLead");
             break;
         default:
             $rota->get("/404");
